@@ -1,0 +1,17 @@
+<html>
+<body>
+  <div ng-app="App" ng-controller="Ctrl as main">
+    <div ng-repeat="row in main.result" style="clear: both">
+        <div 
+          ng-repeat="cell in row"
+          ng-click="main.selectCell(cell, $index)"
+          style="float: left; width: 100px; height: 30px; border: 1px solid black; margin: 5px;">
+            {{cell.name}}
+        </div>
+    </div>
+  </div>
+
+  <script type="text/javascript" src="angular.min.js"></script>
+  <script type="text/javascript" src="main.js"></script>
+</body>
+</html>
