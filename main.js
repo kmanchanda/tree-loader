@@ -1,7 +1,7 @@
 'use strict';
 var app = angular.module('App', []); 
 
-app.controller('Ctrl', function Ctrl() {
+app.controller('Ctrl', function Ctrl($q, $timeout) {
   var vm = this;
 
   var data = {
@@ -9,9 +9,11 @@ app.controller('Ctrl', function Ctrl() {
     children: [
       {
         name: 'Item 2',
+        loaded: true,
         children: [
           {
             name: 'Item 2a',
+            loaded: true,
             children: [
               {name: 'Item 2a-1'},
               {name: 'Item 2a-2'},
@@ -24,6 +26,7 @@ app.controller('Ctrl', function Ctrl() {
       },
       {
         name: 'Item 3',
+        loaded: true,
         children: [
           {name: 'Item 3a'},
           {name: 'Item 3b'},
@@ -32,9 +35,11 @@ app.controller('Ctrl', function Ctrl() {
       },
       {
         name: 'Item 4',
+        loaded: true,
         children: [
           {
             name: 'Item 4a',
+            loaded: true,
             children: [
               {name: 'Item 4a-1'},
               {name: 'Item 4a-2'},
@@ -47,6 +52,7 @@ app.controller('Ctrl', function Ctrl() {
       },
       {
         name: 'Item 5',
+        loaded: true,
         children: [
           {name: 'Item 5a'},
           {name: 'Item 5b'},
@@ -79,10 +85,10 @@ app.controller('Ctrl', function Ctrl() {
 
     var result = [], maxLevel = 0;
     generateGridCells(data, 0, 0);
-    // explicitly set empty cells to null
+    // explicitly set empty cells to {}
     result.forEach(function(r) {
       for(var i = 0; i <= maxLevel; i++) {
-        r[i] = r[i] || null;
+        r[i] = r[i] || {};
       }
     });
 
@@ -99,10 +105,30 @@ app.controller('Ctrl', function Ctrl() {
     });
   };
 
+  var fakeAPICall = function() {
+    var deferred = $q.defer();
+    $timeout(function() {deferred.resolve([{name: 'Test 1'}, {name: 'Test 2'}, {name: 'Test 3'}])}, 2000);
+    return deferred.promise;
+  };
+
+  var loadCellChild = function(cell) {
+    if(cell.loaded === undefined) {
+      cell.loaded = false;
+      fakeAPICall().then(function(response) {
+        cell.loaded = true;
+        cell.children = response;
+        createGridFromRawData();
+      });  
+    }
+    
+  };
 
   vm.selectCell = function(cell, level) {
-    resetSelections(cell, level);
-    createGridFromRawData();
+    if(cell.name && !cell.selected) {
+      resetSelections(cell, level);
+      createGridFromRawData();
+      loadCellChild(cell);
+    }
   };
 
   createGridFromRawData();
