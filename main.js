@@ -57,48 +57,54 @@ app.controller('Ctrl', function Ctrl() {
     ]
   }
 
-  var result;
-
-  var createGrid = function(o, l, row) {
-    console.log(o, l, row)
-    if(o.children) {
-      var selected, selectedRow;
-      var startRow = Math.max(row - Math.floor(o.children.length / 2), 0);
-      o.children.forEach(function(item, i) {
-        result[i + startRow] = result[i + startRow] || [];
-        result[i + startRow][l] = item;
-        if(item.selected) {
-          selected = item;
-          selectedRow = i + startRow;
+  var createGridFromRawData = function() {
+    function generateGridCells(o, level, row) {
+      if(o.children) {
+        var selected, selectedRow;
+        var startRow = Math.max(row - Math.floor(o.children.length / 2), 0);
+        o.children.forEach(function(item, i) {
+          result[i + startRow] = result[i + startRow] || [];
+          result[i + startRow][level] = item;
+          if(item.selected) {
+            selected = item;
+            selectedRow = i + startRow;
+          }
+        });
+        if(selected) {
+          generateGridCells(selected, level + 1, selectedRow);
         }
-      });
-      if(selected) {
-        createGrid(selected, l + 1, selectedRow);
+        maxLevel = Math.max(maxLevel, level);
       }
     }
+
+    var result = [], maxLevel = 0;
+    generateGridCells(data, 0, 0);
+    // explicitly set empty cells to null
+    result.forEach(function(r) {
+      for(var i = 0; i <= maxLevel; i++) {
+        r[i] = r[i] || null;
+      }
+    });
+
+    vm.result = result;
   };
 
-  var processData = function() {
-    result = [];
-    createGrid(data, 0, 0);
-    vm.result = result;
-  }
-
-
-  vm.selectCell = function(cell, l) {
+  var resetSelections = function(cell, level) {
     vm.result.forEach(function(r) {
       r.forEach(function(c, i) {
-        if(i >= l) {
+        if(i >= level && c) {
           c.selected = c === cell; 
         }
       });
-    })
-    // cell.selected = true;
-    processData();
+    });
   };
 
-  processData();
-  
-  console.log(result);
+
+  vm.selectCell = function(cell, level) {
+    resetSelections(cell, level);
+    createGridFromRawData();
+  };
+
+  createGridFromRawData();
 
 });
